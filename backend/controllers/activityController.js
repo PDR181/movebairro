@@ -8,6 +8,8 @@ function startActivity(req, res) {
     id: Date.now(),
     userId,
     startTime: new Date(),
+    endTime: null,
+    duration: 0,
     coordinates: [],
     distance: 0
   };
@@ -23,11 +25,9 @@ function getAllActivities(req, res) {
 }
 
 function addLocation(req, res) {
-
   const { activityId, latitude, longitude } = req.body;
 
   const activities = getActivities();
-
   const activity = activities.find(a => a.id == activityId);
 
   if (!activity) {
@@ -37,7 +37,6 @@ function addLocation(req, res) {
   const lastCoordinate = activity.coordinates[activity.coordinates.length - 1];
 
   if (lastCoordinate) {
-
     const distance = calculateDistance(
       lastCoordinate.latitude,
       lastCoordinate.longitude,
@@ -60,8 +59,32 @@ function addLocation(req, res) {
   });
 }
 
-module.exports = { 
-  startActivity, 
+function finishActivity(req, res) {
+  const { activityId } = req.body;
+
+  const activities = getActivities();
+  const activity = activities.find(a => a.id == activityId);
+
+  if (!activity) {
+    return res.status(404).json({ message: "Atividade não encontrada" });
+  }
+
+  activity.endTime = new Date();
+
+  const start = new Date(activity.startTime).getTime();
+  const end = new Date(activity.endTime).getTime();
+
+  activity.duration = Math.floor((end - start) / 1000);
+
+  res.json({
+    message: "Atividade finalizada",
+    activity
+  });
+}
+
+module.exports = {
+  startActivity,
   getAllActivities,
-  addLocation
+  addLocation,
+  finishActivity
 };
