@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoveBairro</title>
+</head>
+<body>
+
+  <h1>MoveBairro</h1>
+
+  <button onclick="startActivity()">Iniciar Caminhada</button>
+  <button onclick="sendLocation()">Enviar Localização</button>
+
+  <p id="status">Aguardando ação...</p>
+
+  <script>
+    let activityId = null;
+
+    async function startActivity() {
+      try {
+        const response = await fetch("http://localhost:3000/activities/start", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            userId: 1
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Erro ao iniciar atividade");
+        }
+
+        activityId = data.activity.id;
+
+        document.getElementById("status").innerText =
+          "Atividade iniciada! ID: " + activityId;
+
+        alert("Atividade iniciada com sucesso!");
+        console.log("Atividade criada:", data);
+
+      } catch (error) {
+        console.error("Erro ao iniciar atividade:", error);
+        document.getElementById("status").innerText =
+          "Erro ao iniciar atividade: " + error.message;
+      }
+    }
+
+    function sendLocation() {
+      if (!activityId) {
+        alert("Inicie a atividade antes de enviar localização.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(async position => {
+        try {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+
+          const response = await fetch("http://localhost:3000/activities/location", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              activityId: activityId,
+              latitude: latitude,
+              longitude: longitude
+            })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.message || "Erro ao enviar localização");
+          }
+
+          document.getElementById("status").innerText =
+            "Distância total: " + data.totalDistance + " km";
+
+          console.log("Localização enviada:", data);
+
+        } catch (error) {
+          console.error("Erro ao enviar localização:", error);
+          document.getElementById("status").innerText =
+            "Erro ao enviar localização: " + error.message;
+        }
+      }, error => {
+        console.error("Erro ao obter localização:", error);
+        document.getElementById("status").innerText =
+          "Erro ao obter localização.";
+      });
+    }
+  </script>
+
+</body>
+</html>
