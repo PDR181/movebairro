@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
+const pool = require("./config/db");
 
 const userRoutes = require("./routes/userRoutes");
 const activityRoutes = require("./routes/activityRoutes");
@@ -15,6 +16,15 @@ app.get("/", (req, res) => {
   res.send("API MoveBairro funcionando");
 });
 
-app.listen(3000, () => {
-  console.log("Servidor rodando na porta 3000");
-});
+// 👇 CONEXÃO COM BANCO
+pool.connect()
+  .then(() => {
+    console.log("Conectado ao PostgreSQL");
+
+    app.listen(3000, () => {
+      console.log("Servidor rodando na porta 3000");
+    });
+  })
+  .catch((err) => {
+    console.error("Erro ao conectar no PostgreSQL:", err);
+  });
