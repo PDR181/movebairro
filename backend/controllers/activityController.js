@@ -1,90 +1,114 @@
-const { createActivity, getActivities } = require("../models/activityModel");
+const {
+  createActivity,
+  findActivityById,
+  finishActivity,
+  updateActivityDistance,
+  getActivities
+} = require("../models/activityModel");
+
+const {
+  createCoordinate,
+  getLastCoordinate
+} = require("../models/coordinateModel");
+
 const calculateDistance = require("../utils/distance");
 
-function startActivity(req, res) {
+async function startActivity(req, res) {
   const { userId } = req.body;
 
-  const activity = {
-    id: Date.now(),
-    userId,
-    startTime: new Date(),
-    endTime: null,
-    duration: 0,
-    coordinates: [],
-    distance: 0
-  };
+  try {
+    const activity = await createActivity(userId);
 
-  createActivity(activity);
-
-  res.json({ message: "Atividade iniciada", activity });
+    res.status(201).json({
+      message: "Atividade iniciada",
+      activity
+    });
+  } catch (error) {
+    console.error("Erro ao iniciar atividade:", error);
+    res.status(500).json({
+      message: "Erro ao iniciar atividade",
+      error: error.message
+    });
+  }
 }
 
-function getAllActivities(req, res) {
-  const activities = getActivities();
-  res.json(activities);
+async function getAllActivities(req, res) {
+  try {
+    const activities = await getActivities();
+    res.json(activities);
+  } catch (error) {
+    console.error("Erro ao buscar atividades:", error);
+    res.status(500).json({ message: "Erro ao buscar atividades" });
+  }
 }
 
-function addLocation(req, res) {
+async function addLocation(req, res) {
   const { activityId, latitude, longitude } = req.body;
 
-  const activities = getActivities();
-  const activity = activities.find(a => a.id == activityId);
+  try {
+    const activity = await findActivityById(activityId);
 
-  if (!activity) {
-    return res.status(404).json({ message: "Atividade não encontrada" });
+    if (!activity) {
+      return res.status(404).json({ message: "Atividade não encontrada" });
+    }
+
+    const lastCoordinate = await getLastCoordinate(activityId);
+
+    let distanceToAdd = 0;
+
+    if (lastCoordinate) {
+      distanceToAdd = calculateDistance(
+        Number(lastCoordinate.latitude),
+        Number(lastCoordinate.longitude),
+        Number(latitude),
+        Number(longitude)
+      );
+    }
+
+    await createCoordinate(activityId, latitude, longitude);
+
+    const updatedActivity = await updateActivityDistance(activityId, distanceToAdd);
+
+    res.json({
+      message: "Localização adicionada",
+      distanceAdded: distanceToAdd,
+      totalDistance: updatedActivity.distance
+    });
+  } catch (error) {
+    console.error("Erro ao adicionar localização:", error);
+    res.status(500).json({
+      message: "Erro ao adicionar localização",
+      error: error.message
+    });
   }
-
-  const lastCoordinate = activity.coordinates[activity.coordinates.length - 1];
-
-  if (lastCoordinate) {
-    const distance = calculateDistance(
-      lastCoordinate.latitude,
-      lastCoordinate.longitude,
-      latitude,
-      longitude
-    );
-
-    activity.distance += distance;
-  }
-
-  activity.coordinates.push({
-    latitude,
-    longitude,
-    time: new Date()
-  });
-
-  res.json({
-    message: "Localização adicionada",
-    totalDistance: activity.distance
-  });
 }
 
-function finishActivity(req, res) {
+async function finishActivityController(req, res) {
   const { activityId } = req.body;
 
-  const activities = getActivities();
-  const activity = activities.find(a => a.id == activityId);
+  try {
+    const activity = await finishActivity(activityId);
 
-  if (!activity) {
-    return res.status(404).json({ message: "Atividade não encontrada" });
+    if (!activity) {
+      return res.status(404).json({ message: "Atividade não encontrada" });
+    }
+
+    res.json({
+      message: "Atividade finalizada",
+      activity
+    });
+  } catch (error) {
+    console.error("Erro ao finalizar atividade:", error);
+    res.status(500).json({
+      message: "Erro ao finalizar atividade",
+      error: error.message
+    });
   }
-
-  activity.endTime = new Date();
-
-  const start = new Date(activity.startTime).getTime();
-  const end = new Date(activity.endTime).getTime();
-
-  activity.duration = Math.floor((end - start) / 1000);
-
-  res.json({
-    message: "Atividade finalizada",
-    activity
-  });
 }
 
 module.exports = {
   startActivity,
   getAllActivities,
   addLocation,
-  finishActivity
+  finishActivity: finishActivityController
 };
