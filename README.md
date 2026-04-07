@@ -11,6 +11,7 @@ Pessoas sedentárias
 Jovens e adultos da comunidade
 Usuários interessados em melhorar a saúde
 Pessoas que buscam motivação para se exercitar
+
 🚀 Funcionalidades
 Cadastro de usuários
 Login com autenticação
@@ -19,6 +20,7 @@ Registro de coordenadas GPS
 Cálculo de distância percorrida
 Finalização de atividade
 Armazenamento no banco de dados
+
 🛠️ Tecnologias utilizadas
 Backend
 Node.js
@@ -27,6 +29,7 @@ PostgreSQL
 Frontend
 HTML
 JavaScript (Fetch API)
+
 🗄️ Banco de dados
 
 Principais tabelas:
@@ -34,6 +37,7 @@ Principais tabelas:
 users
 activities
 coordinates
+
 🔗 Endpoints da API
 Usuários
 POST /users/register
@@ -43,6 +47,7 @@ POST /activities/start
 POST /activities/location
 POST /activities/finish
 GET /activities
+
 ▶️ Como rodar o projeto
 1. Clonar o repositório
 git clone <seu-repo>
@@ -58,10 +63,12 @@ DB_PASSWORD=sua_senha
 DB_PORT=5432
 5. Rodar servidor
 node server.js
+
 📌 Status do projeto
 Backend: ✅ Concluído
 Banco de dados: ✅ Concluído
 Frontend: 🔄 Em desenvolvimento
+
 💡 Melhorias futuras
 Ranking de usuários
 Dashboard com estatísticas
