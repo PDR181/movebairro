@@ -3,7 +3,8 @@ const {
   findActivityById,
   finishActivity,
   updateActivityDistance,
-  getActivities
+  getActivities,
+  getRanking
 } = require("../models/activityModel");
 
 const {
@@ -106,9 +107,23 @@ async function finishActivityController(req, res) {
   }
 }
 
+async function getRankingController(req, res) {
+  try {
+    const ranking = await getRanking();
+    res.json(ranking);
+  } catch (error) {
+    console.error("Erro ao buscar ranking:", error);
+    res.status(500).json({
+      message: "Erro ao buscar ranking",
+      error: error.message
+    });
+  }
+}
+
 module.exports = {
   startActivity,
   getAllActivities,
   addLocation,
-  finishActivity: finishActivityController
+  finishActivity: finishActivityController,
+  getRanking: getRankingController
 };

@@ -4,6 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MoveBairro</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    button {
+      margin: 5px;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    #history,
+    #ranking {
+      margin-top: 30px;
+    }
+
+    .activity-card {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      background-color: #f9f9f9;
+    }
+  </style>
 </head>
 <body>
 
@@ -11,8 +41,21 @@
 
   <button onclick="startActivity()">Iniciar Caminhada</button>
   <button onclick="sendLocation()">Enviar Localização</button>
+  <button onclick="finishActivity()">Finalizar Caminhada</button>
+  <button onclick="loadHistory()">Ver Histórico</button>
+  <button onclick="loadRanking()">Ver Ranking</button>
 
   <p id="status">Aguardando ação...</p>
+
+  <div id="history">
+    <h2>Histórico de Atividades</h2>
+    <div id="activitiesList"></div>
+  </div>
+
+  <div id="ranking">
+    <h2>Ranking de Usuários</h2>
+    <div id="rankingList"></div>
+  </div>
 
   <script>
     let activityId = null;
@@ -39,9 +82,6 @@
 
         document.getElementById("status").innerText =
           "Atividade iniciada! ID: " + activityId;
-
-        alert("Atividade iniciada com sucesso!");
-        console.log("Atividade criada:", data);
 
       } catch (error) {
         console.error("Erro ao iniciar atividade:", error);
@@ -80,9 +120,7 @@
           }
 
           document.getElementById("status").innerText =
-            "Distância total: " + data.totalDistance + " km";
-
-          console.log("Localização enviada:", data);
+            "Distância total: " + Number(data.totalDistance).toFixed(2) + " km";
 
         } catch (error) {
           console.error("Erro ao enviar localização:", error);
@@ -94,6 +132,115 @@
         document.getElementById("status").innerText =
           "Erro ao obter localização.";
       });
+    }
+
+    async function finishActivity() {
+      if (!activityId) {
+        alert("Nenhuma atividade em andamento.");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://localhost:3000/activities/finish", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            activityId: activityId
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Erro ao finalizar atividade");
+        }
+
+        document.getElementById("status").innerText =
+          `Atividade finalizada! Distância: ${Number(data.activity.distance).toFixed(2)} km | Tempo: ${data.activity.duration} s`;
+
+        activityId = null;
+
+        loadHistory();
+        loadRanking();
+
+      } catch (error) {
+        console.error("Erro ao finalizar atividade:", error);
+        document.getElementById("status").innerText =
+          "Erro ao finalizar atividade: " + error.message;
+      }
+    }
+
+    async function loadHistory() {
+      try {
+        const response = await fetch("http://localhost:3000/activities");
+        const activities = await response.json();
+
+        const activitiesList = document.getElementById("activitiesList");
+        activitiesList.innerHTML = "";
+
+        if (!activities.length) {
+          activitiesList.innerHTML = "<p>Nenhuma atividade encontrada.</p>";
+          return;
+        }
+
+        activities.forEach(activity => {
+          const div = document.createElement("div");
+          div.className = "activity-card";
+
+          div.innerHTML = `
+            <p><strong>ID:</strong> ${activity.id}</p>
+            <p><strong>Usuário:</strong> ${activity.user_id}</p>
+            <p><strong>Distância:</strong> ${Number(activity.distance).toFixed(2)} km</p>
+            <p><strong>Duração:</strong> ${activity.duration || 0} segundos</p>
+            <p><strong>Início:</strong> ${new Date(activity.start_time).toLocaleString()}</p>
+            <p><strong>Fim:</strong> ${activity.end_time ? new Date(activity.end_time).toLocaleString() : "Em andamento"}</p>
+          `;
+
+          activitiesList.appendChild(div);
+        });
+
+      } catch (error) {
+        console.error("Erro ao carregar histórico:", error);
+        document.getElementById("activitiesList").innerHTML =
+          "<p>Erro ao carregar histórico.</p>";
+      }
+    }
+
+    async function loadRanking() {
+      try {
+        const response = await fetch("http://localhost:3000/activities/ranking");
+        const ranking = await response.json();
+
+        const rankingList = document.getElementById("rankingList");
+        rankingList.innerHTML = "";
+
+        if (!ranking.length) {
+          rankingList.innerHTML = "<p>Nenhum dado de ranking encontrado.</p>";
+          return;
+        }
+
+        ranking.forEach((user, index) => {
+          const div = document.createElement("div");
+          div.className = "activity-card";
+
+          div.innerHTML = `
+            <p><strong>Posição:</strong> ${index + 1}º</p>
+            <p><strong>Usuário:</strong> ${user.name}</p>
+            <p><strong>Distância Total:</strong> ${Number(user.total_distance).toFixed(2)} km</p>
+            <p><strong>Tempo Total:</strong> ${user.total_duration} segundos</p>
+            <p><strong>Atividades:</strong> ${user.total_activities}</p>
+          `;
+
+          rankingList.appendChild(div);
+        });
+
+      } catch (error) {
+        console.error("Erro ao carregar ranking:", error);
+        document.getElementById("rankingList").innerHTML =
+          "<p>Erro ao carregar ranking.</p>";
+      }
     }
   </script>
 
