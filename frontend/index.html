@@ -132,6 +132,8 @@ let watchId = null;
 // MAPA
 let map;
 let polyline;
+let startMarker = null;
+let endMarker = null;
 let path = [];
 
 function initMap() {
@@ -279,14 +281,16 @@ async function loadRanking() {
 
 async function viewActivity(id) {
 
-  // remove seleção anterior
+  // limpar seleção visual
   document.querySelectorAll(".card").forEach(c => c.classList.remove("selected"));
-
-  // adiciona no clicado
   const selected = document.getElementById(`activity-${id}`);
   if (selected) selected.classList.add("selected");
 
+  // limpar mapa
   polyline.setLatLngs([]);
+
+  if (startMarker) map.removeLayer(startMarker);
+  if (endMarker) map.removeLayer(endMarker);
 
   const res = await fetch(`http://localhost:3000/activities/${id}/coordinates`);
   const coords = await res.json();
@@ -298,7 +302,20 @@ async function viewActivity(id) {
 
   const path = coords.map(c => [c.latitude, c.longitude]);
 
+  // desenhar linha
   polyline.setLatLngs(path);
+
+  // 📍 início
+  startMarker = L.marker(path[0])
+    .addTo(map)
+    .bindPopup("Início");
+
+  // 🏁 fim
+  endMarker = L.marker(path[path.length - 1])
+    .addTo(map)
+    .bindPopup("Fim");
+
+  // zoom automático
   map.fitBounds(path);
 
   setStatus("Visualizando atividade " + id);
