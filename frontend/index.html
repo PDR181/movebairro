@@ -107,6 +107,7 @@
 
 <script>
 let activityId = null;
+let watchId = null;
 
 // MAPA
 let map;
@@ -142,18 +143,16 @@ async function startActivity() {
   polyline.setLatLngs([]);
 
   setStatus("Atividade iniciada");
-}
 
-function sendLocation() {
-  if (!activityId) return alert("Inicie primeiro");
-
-  navigator.geolocation.getCurrentPosition(async pos => {
+  // 🔥 TRACKING AUTOMÁTICO
+  watchId = navigator.geolocation.watchPosition(async (pos) => {
 
     const lat = pos.coords.latitude;
     const lng = pos.coords.longitude;
 
-    // desenha no mapa
     const point = [lat, lng];
+
+    // desenha no mapa
     path.push(point);
     polyline.setLatLngs(path);
     map.setView(point, 17);
@@ -170,11 +169,26 @@ function sendLocation() {
       })
     });
 
-    setStatus("Localização enviada");
+    setStatus("Rastreando atividade...");
+
+  }, (err) => {
+    console.error(err);
+    setStatus("Erro ao obter localização");
+  }, {
+    enableHighAccuracy: true,
+    maximumAge: 0,
+    timeout: 5000
   });
 }
 
 async function finishActivity() {
+
+  // 🛑 PARAR TRACKING
+  if (watchId !== null) {
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+  }
+
   await fetch("http://localhost:3000/activities/finish", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -190,7 +204,15 @@ async function loadHistory() {
   const data = await res.json();
 
   const div = document.getElementById("activitiesList");
-  div.innerHTML = JSON.stringify(data, null, 2);
+
+  div.innerHTML = data.map(a => `
+    <div onclick="viewActivity(${a.id})" 
+         style="cursor:pointer; padding:10px; border-bottom:1px solid #ccc;">
+      🏃 Atividade ${a.id} <br>
+      Distância: ${a.distance} <br>
+      Duração: ${a.duration || "Em andamento"}
+    </div>
+  `).join("");
 }
 
 async function loadRanking() {
@@ -200,6 +222,28 @@ async function loadRanking() {
   const div = document.getElementById("rankingList");
   div.innerHTML = JSON.stringify(data, null, 2);
 }
+
+async function viewActivity(id) {
+
+  const res = await fetch(`http://localhost:3000/activities/${id}/coordinates`);
+  const coords = await res.json();
+
+  if (!coords.length) {
+    alert("Sem coordenadas");
+    return;
+  }
+
+  const path = coords.map(c => [c.latitude, c.longitude]);
+
+  // desenha no mapa
+  polyline.setLatLngs(path);
+
+  // centraliza no mapa
+  map.setView(path[0], 15);
+
+  setStatus("Visualizando atividade " + id);
+}
+
 </script>
 
 </body>

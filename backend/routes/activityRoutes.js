@@ -6,7 +6,8 @@ const {
   getAllActivities,
   addLocation,
   finishActivity,
-  getRanking
+  getRanking,
+  getCoordinates // 👈 ADICIONAR
 } = require("../controllers/activityController");
 
 router.post("/start", startActivity);
@@ -14,5 +15,8 @@ router.get("/", getAllActivities);
 router.post("/location", addLocation);
 router.post("/finish", finishActivity);
 router.get("/ranking", getRanking);
+
+// 👇 NOVA ROTA
+router.get("/:id/coordinates", getCoordinates);
 
 module.exports = router;

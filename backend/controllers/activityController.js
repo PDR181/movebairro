@@ -9,11 +9,13 @@ const {
 
 const {
   createCoordinate,
-  getLastCoordinate
+  getLastCoordinate,
+  getCoordinatesByActivity // 👈 ADICIONADO
 } = require("../models/coordinateModel");
 
 const calculateDistance = require("../utils/distance");
 
+// 🔹 INICIAR ATIVIDADE
 async function startActivity(req, res) {
   const { userId } = req.body;
 
@@ -33,6 +35,7 @@ async function startActivity(req, res) {
   }
 }
 
+// 🔹 LISTAR ATIVIDADES
 async function getAllActivities(req, res) {
   try {
     const activities = await getActivities();
@@ -43,6 +46,7 @@ async function getAllActivities(req, res) {
   }
 }
 
+// 🔹 ADICIONAR LOCALIZAÇÃO
 async function addLocation(req, res) {
   const { activityId, latitude, longitude } = req.body;
 
@@ -84,6 +88,7 @@ async function addLocation(req, res) {
   }
 }
 
+// 🔹 FINALIZAR ATIVIDADE
 async function finishActivityController(req, res) {
   const { activityId } = req.body;
 
@@ -107,6 +112,7 @@ async function finishActivityController(req, res) {
   }
 }
 
+// 🔹 RANKING
 async function getRankingController(req, res) {
   try {
     const ranking = await getRanking();
@@ -120,10 +126,27 @@ async function getRankingController(req, res) {
   }
 }
 
+// 🔹 NOVO: BUSCAR COORDENADAS DA ATIVIDADE
+async function getCoordinates(req, res) {
+  const { id } = req.params;
+
+  try {
+    const coordinates = await getCoordinatesByActivity(id);
+    res.json(coordinates);
+  } catch (error) {
+    console.error("Erro ao buscar coordenadas:", error);
+    res.status(500).json({
+      message: "Erro ao buscar coordenadas",
+      error: error.message
+    });
+  }
+}
+
 module.exports = {
   startActivity,
   getAllActivities,
   addLocation,
   finishActivity: finishActivityController,
-  getRanking: getRankingController
+  getRanking: getRankingController,
+  getCoordinates // 👈 EXPORTADO
 };

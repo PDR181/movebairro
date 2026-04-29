@@ -25,7 +25,21 @@ async function getLastCoordinate(activityId) {
   return result.rows[0];
 }
 
+async function getCoordinatesByActivity(activityId) {
+  const result = await pool.query(
+    `SELECT latitude, longitude 
+     FROM coordinates 
+     WHERE activity_id = $1 
+     ORDER BY created_at ASC`,
+    [activityId]
+  );
+
+  return result.rows;
+}
+
 module.exports = {
   createCoordinate,
-  getLastCoordinate
+  getLastCoordinate,
+  getCoordinatesByActivity
 };
+
