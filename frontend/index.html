@@ -55,10 +55,31 @@
 
     .card {
       background: white;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-    }
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: transform 0.1s ease;
+}
+
+    .card:hover {
+      transform: scale(1.02);
+}
+
+    .card-header {
+      font-weight: bold;
+      margin-bottom: 6px;
+}
+
+    .card-body {
+      color: #555;
+}
+
+    .selected {
+      border: 2px solid #2563eb;
+      background: #eff6ff;
+}
 
     #map {
       height: 400px;
@@ -76,7 +97,6 @@
 
   <div class="actions">
     <button class="btn-start" onclick="startActivity()">Iniciar</button>
-    <button class="btn-location" onclick="sendLocation()">Localização</button>
     <button class="btn-finish" onclick="finishActivity()">Finalizar</button>
     <button class="btn-history" onclick="loadHistory()">Histórico</button>
     <button class="btn-ranking" onclick="loadRanking()">Ranking</button>
@@ -199,6 +219,20 @@ async function finishActivity() {
   setStatus("Finalizado");
 }
 
+function formatDistance(meters) {
+  if (!meters) return "0 km";
+  return (meters / 1000).toFixed(2) + " km";
+}
+
+function formatDuration(seconds) {
+  if (!seconds) return "Em andamento";
+
+  const min = Math.floor(seconds / 60);
+  const sec = seconds % 60;
+
+  return `${min}m ${sec}s`;
+}
+
 async function loadHistory() {
   const res = await fetch("http://localhost:3000/activities");
   const data = await res.json();
@@ -206,11 +240,17 @@ async function loadHistory() {
   const div = document.getElementById("activitiesList");
 
   div.innerHTML = data.map(a => `
-    <div onclick="viewActivity(${a.id})" 
-         style="cursor:pointer; padding:10px; border-bottom:1px solid #ccc;">
-      🏃 Atividade ${a.id} <br>
-      Distância: ${a.distance} <br>
-      Duração: ${a.duration || "Em andamento"}
+    <div id="activity-${a.id}" onclick="viewActivity(${a.id})" class="card">
+    
+      <div class="card-header">
+        🏃 Atividade ${a.id}
+      </div>
+
+      <div class="card-body">
+        <div>📏 ${formatDistance(a.distance)}</div>
+        <div>⏱ ${formatDuration(a.duration)}</div>
+      </div>
+
     </div>
   `).join("");
 }
@@ -220,10 +260,33 @@ async function loadRanking() {
   const data = await res.json();
 
   const div = document.getElementById("rankingList");
-  div.innerHTML = JSON.stringify(data, null, 2);
+
+  div.innerHTML = data.map((r, i) => `
+    <div class="card">
+      
+      <div class="card-header">
+        🥇 #${i + 1}
+      </div>
+
+      <div class="card-body">
+        👤 Usuário ${r.user_id}<br>
+        📏 ${formatDistance(r.total_distance)}
+      </div>
+
+    </div>
+  `).join("");
 }
 
 async function viewActivity(id) {
+
+  // remove seleção anterior
+  document.querySelectorAll(".card").forEach(c => c.classList.remove("selected"));
+
+  // adiciona no clicado
+  const selected = document.getElementById(`activity-${id}`);
+  if (selected) selected.classList.add("selected");
+
+  polyline.setLatLngs([]);
 
   const res = await fetch(`http://localhost:3000/activities/${id}/coordinates`);
   const coords = await res.json();
@@ -235,11 +298,8 @@ async function viewActivity(id) {
 
   const path = coords.map(c => [c.latitude, c.longitude]);
 
-  // desenha no mapa
   polyline.setLatLngs(path);
-
-  // centraliza no mapa
-  map.setView(path[0], 15);
+  map.fitBounds(path);
 
   setStatus("Visualizando atividade " + id);
 }
