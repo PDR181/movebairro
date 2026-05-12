@@ -95,11 +95,31 @@
     <h1>MoveBairro</h1>
   </div>
 
+  <div class="card">
+  <input 
+    id="username" 
+    placeholder="Digite seu nome"
+    style="
+      width:100%;
+      padding:12px;
+      border-radius:8px;
+      border:1px solid #ccc;
+    "
+  />
+</div>
+
   <div class="actions">
+    <button 
+  onclick="setUser()" 
+  style="background:#2563eb; color:white;"
+>
+  Entrar
+    </button>
     <button class="btn-start" onclick="startActivity()">Iniciar</button>
     <button class="btn-finish" onclick="finishActivity()">Finalizar</button>
     <button class="btn-history" onclick="loadHistory()">Histórico</button>
     <button class="btn-ranking" onclick="loadRanking()">Ranking</button>
+    
   </div>
 
   <div class="card">
@@ -128,6 +148,7 @@
 <script>
 let activityId = null;
 let watchId = null;
+let userId = null;
 
 // MAPA
 let map;
@@ -151,11 +172,41 @@ function setStatus(msg) {
   document.getElementById("status").innerText = msg;
 }
 
+async function setUser() {
+
+  const name = document.getElementById("username").value;
+
+  if (!name) {
+    alert("Digite seu nome");
+    return;
+  }
+
+  const res = await fetch("http://localhost:3000/users", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ name })
+  });
+
+  const data = await res.json();
+
+  userId = data.user.id;
+
+  setStatus("Usuário conectado: " + name);
+}
+
 async function startActivity() {
+
+  if (!userId) {
+  alert("Defina um usuário primeiro");
+  return;
+}
+
   const res = await fetch("http://localhost:3000/activities/start", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId: 1 })
+    body: JSON.stringify({ userId })
   });
 
   const data = await res.json();
