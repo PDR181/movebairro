@@ -13,6 +13,7 @@ Usuários interessados em melhorar a saúde
 Pessoas que buscam motivação para se exercitar
 
 🚀 Funcionalidades
+
 Cadastro de usuários
 Login com autenticação
 Início de atividade física
