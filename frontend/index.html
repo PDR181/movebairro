@@ -14,229 +14,420 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    * { box-sizing: border-box; }
 
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: #f4f7fb;
-    }
-
-    .container {
-    width: 100%;
-    max-width: 1100px;
-    margin: auto;
-    padding: 15px;
-    }
-
-    .hero {
-      background: #2563eb;
-      color: white;
-      padding: 20px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-    }
-
-    .actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-    }
-
-    button {
-      flex: 1;
-      min-width: 120px;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      cursor: pointer;
-      font-size: 15px;
-    }
-
-    .btn-start { background: green; }
-    .btn-location { background: blue; }
-    .btn-finish { background: red; }
-    .btn-history { background: purple; }
-    .btn-ranking { background: orange; color: black; }
-
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 12px;
-      margin-bottom: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      cursor: pointer;
-      transition: transform 0.1s ease;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-    .card:hover {
-      transform: scale(1.02);
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f7fb;
+  color: #222;
 }
 
-    .card-header {
-      font-weight: bold;
-      margin-bottom: 6px;
+.app {
+  display: flex;
+  min-height: 100vh;
 }
 
-    .card-body {
-      color: #555;
+/* SIDEBAR */
+
+.sidebar {
+  width: 260px;
+  background: #2563eb;
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
-    .selected {
-      border: 2px solid #2563eb;
-      background: #eff6ff;
+.logo {
+  margin-bottom: 30px;
 }
 
-    #map {
-      width: 100%;
-      height: 400px;
-      border-radius: 10px;
-    }
-@media (max-width: 768px) {
+.logo-img {
+  width: 180px;
+  max-width: 100%;
+}
 
-  .actions {
+.profile {
+  background: rgba(255,255,255,0.1);
+  padding: 20px;
+  border-radius: 16px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.avatar {
+  font-size: 50px;
+  margin-bottom: 10px;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu button {
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  cursor: pointer;
+  font-size: 15px;
+  transition: 0.2s;
+}
+
+.menu button:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* CONTEÚDO */
+
+.content {
+  flex: 1;
+  padding: 25px;
+}
+
+.topbar {
+  margin-bottom: 25px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
+
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+
+  transform: translateY(-4px);
+
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+.stat-card h3 {
+  margin-bottom: 10px;
+  color: #666;
+}
+
+.stat-card p {
+  font-size: 28px;
+  font-weight: bold;
+  color: #2563eb;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.card:hover {
+
+  transform: translateY(-3px);
+
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+.card h3 {
+  margin-bottom: 20px;
+}
+
+#map {
+  width: 100%;
+  height: 450px;
+  border-radius: 12px;
+}
+
+/* HISTÓRICO */
+
+.activity-card {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.activity-card:hover {
+  transform: scale(1.01);
+  background: #eef4ff;
+}
+
+/* MOBILE */
+
+@media (max-width: 900px) {
+
+  .app {
     flex-direction: column;
   }
 
-  button {
+  .sidebar {
+    box-shadow: 5px 0 20px rgba(0,0,0,0.08);
     width: 100%;
   }
 
-  .container {
-    padding: 10px;
+  .content {
+    padding: 15px;
   }
 
   #map {
     height: 300px;
   }
+}
 
-  h1, h3 {
-    text-align: center;
+#loadingOverlay {
+
+  position: fixed;
+
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background: rgba(255,255,255,0.9);
+
+  display: none;
+
+  flex-direction: column;
+
+  justify-content: center;
+  align-items: center;
+
+  z-index: 9999;
+}
+
+.loader {
+
+  width: 50px;
+  height: 50px;
+
+  border: 5px solid #ddd;
+
+  border-top: 5px solid #2563eb;
+
+  border-radius: 50%;
+
+  animation: spin 1s linear infinite;
+
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+
+  100% {
+    transform: rotate(360deg);
   }
 }
 
-  </style>
+#toast {
+
+  position: fixed;
+
+  bottom: 30px;
+  right: 30px;
+
+  background: #2563eb;
+
+  color: white;
+
+  padding: 14px 20px;
+
+  border-radius: 10px;
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  transition: 0.3s;
+
+  z-index: 99999;
+}
+
+#toast.show {
+
+  opacity: 1;
+
+  pointer-events: auto;
+}
+
+</style>
 </head>
 
 <body>
-<div class="container">
 
-  <div class="hero">
-    <h1>MoveBairro</h1>
-  </div>
+<div id="loadingOverlay">
 
-  <div class="card">
+  <div class="loader"></div>
 
-    <h3>Login</h3>
+  <p>Carregando...</p>
 
-    <input
-      type="text"
-      id="name"
-      placeholder="Nome"
-      style="width:100%;padding:10px;margin-bottom:10px;"
-    >
-
-    <input
-      type="email"
-      id="email"
-      placeholder="Email"
-      style="width:100%;padding:10px;margin-bottom:10px;"
-    >
-
-    <input
-      type="password"
-      id="password"
-      placeholder="Senha"
-      style="width:100%;padding:10px;margin-bottom:10px;"
-    >
-
-    <div style="display:flex; gap:10px;">
-
-      <button onclick="registerUser()" style="background:green;">
-        Cadastrar
-      </button>
-
-      <button onclick="loginUser()" style="background:#2563eb;">
-        Login
-      </button>
-
-    </div>
-
-  </div>
-
-  <div class="card">
-  <input 
-    id="username" 
-    placeholder="Digite seu nome"
-    style="
-      width:100%;
-      padding:12px;
-      border-radius:8px;
-      border:1px solid #ccc;
-    "
-  />
 </div>
 
-  <div class="actions">
-    <button 
-  onclick="setUser()" 
-  style="background:#2563eb; color:white;"
->
-  Entrar
-    </button>
-    <button onclick="logout()" style="background:#444;">
-  Sair
-    </button>
-    <button class="btn-start" onclick="startActivity()">Iniciar</button>
-    <button class="btn-finish" onclick="finishActivity()">Finalizar</button>
-    <button class="btn-history" onclick="loadHistory()">Histórico</button>
-    <button class="btn-ranking" onclick="loadRanking()">Ranking</button>
-    
-  </div>
+<div id="toast"></div>
 
-  <div class="card">
-    <b>Status:</b>
-    <p id="status">Aguardando...</p>
-  </div>
+<div class="app">
 
-  <!-- MAPA -->
-  <div class="card">
-    <h3>Mapa</h3>
-    <div id="map"></div>
-  </div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
 
-  <div class="card">
-    <h3>Estatísticas</h3>
+    <div class="logo">
 
-    <div id="stats">
-      Nenhuma atividade finalizada
+      <img
+        src="logo.png"
+        alt="MoveBairro"
+        class="logo-img"
+      >
+
     </div>
-  </div>  
 
-  <div class="card">
-    <h3>Histórico</h3>
-    <div id="activitiesList"></div>
-  </div>
+    <div class="profile">
 
-  <div class="card">
-    <h3>Dashboard</h3>
+      <div class="avatar">
+        👤
+      </div>
 
-    <canvas id="distanceChart"></canvas>
-    <br><br>
+      <h3 id="sidebarUser">
+        Usuário
+      </h3>
 
-    <canvas id="speedChart"></canvas>
-  </div>
+      <p id="sidebarEmail">
+        online
+      </p>
 
-  <div class="card">
-    <h3>Ranking</h3>
-    <div id="rankingList"></div>
-  </div>
+    </div>
+
+    <nav class="menu">
+
+      <button onclick="startActivity()">
+        ▶ Iniciar
+      </button>
+
+      <button onclick="finishActivity()">
+        ⏹ Finalizar
+      </button>
+
+      <button onclick="loadHistory()">
+        📜 Histórico
+      </button>
+
+      <button onclick="loadRanking()">
+        🏆 Ranking
+      </button>
+
+      <button onclick="logout()">
+        🚪 Sair
+      </button>
+
+    </nav>
+
+  </aside>
+
+  <!-- CONTEÚDO -->
+  <main class="content">
+
+    <!-- TOPO -->
+    <div class="topbar">
+
+      <div>
+        <h1>
+          Bem-vindo 👋
+        </h1>
+
+        <p id="status">
+          Sistema carregado
+        </p>
+      </div>
+
+    </div>
+
+    <!-- CARDS -->
+    <div class="stats-grid">
+
+      <div class="stat-card">
+        <h3>Atividades</h3>
+        <p id="totalActivities">0</p>
+      </div>
+
+      <div class="stat-card">
+        <h3>Distância</h3>
+        <p id="totalDistance">0 km</p>
+      </div>
+
+      <div class="stat-card">
+        <h3>Tempo</h3>
+        <p id="totalTime">0 min</p>
+      </div>
+
+    </div>
+
+    <!-- MAPA -->
+    <div class="card">
+      <h3>Mapa</h3>
+      <div id="map"></div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="card">
+      <h3>Dashboard</h3>
+
+      <canvas id="distanceChart"></canvas>
+
+      <br><br>
+
+      <canvas id="speedChart"></canvas>
+    </div>
+
+    <!-- HISTÓRICO -->
+    <div class="card">
+      <h3>Histórico</h3>
+      <div id="activitiesList"></div>
+    </div>
+
+    <!-- RANKING -->
+    <div class="card">
+      <h3>Ranking</h3>
+      <div id="rankingList"></div>
+    </div>
+
+  </main>
 
 </div>
 
 <script>
+
+const token = localStorage.getItem("token");
+
+if (!token) {
+  window.location.href = "login.html";
+}
+
 let activityId = null;
 let watchId = null;
 let userId = null;
@@ -265,52 +456,16 @@ function setStatus(msg) {
   document.getElementById("status").innerText = msg;
 }
 
-async function setUser() {
-
-  const name = document.getElementById("username").value;
-
-  if (!name) {
-    alert("Digite seu nome");
-    return;
-  }
-
-  const email = `${name.toLowerCase()}@movebairro.com`;
-  const password = "123456";
-
-  const res = await fetch("http://localhost:3000/users/register", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      name,
-      email,
-      password
-    })
-  });
-
-  const data = await res.json();
-
-  console.log(data);
-
-  if (!res.ok) {
-    alert(data.message || "Erro ao criar usuário");
-    return;
-  }
-
-  userId = data.user.id;
-  localStorage.setItem("userId", userId);
-  localStorage.setItem("userName", name);
-
-  setStatus("Usuário conectado: " + name);
-}
-
 async function startActivity() {
 
   if (!userId) {
-  alert("Defina um usuário primeiro");
-  return;
-}
+
+    showToast("Usuário não autenticado");
+
+    window.location.href = "login.html";
+
+    return;
+  }
 
   const res = await fetch("http://localhost:3000/activities/start", {
     method: "POST",
@@ -396,27 +551,60 @@ function formatDuration(seconds) {
 }
 
 async function loadHistory() {
+  showLoading();
   const res = await fetch("http://localhost:3000/activities");
   const data = await res.json();
+  if (!data.length) {
+
+  document.getElementById("activitiesList")
+    .innerHTML = `
+      <p>Nenhuma atividade encontrada.</p>
+    `;
+
+  hideLoading();
+
+  return;
+}
+  updateDashboardStats(data);
 
   const div = document.getElementById("activitiesList");
 
-  div.innerHTML = data.map(a => `
-    <div id="activity-${a.id}" onclick="viewActivity(${a.id})" class="card">
-    
-      <div class="card-header">
-        🏃 Atividade ${a.id}
-      </div>
+  div.innerHTML = data.map(a => {
 
-      <div class="card-body">
-        <div>📏 ${formatDistance(a.distance)}</div>
-        <div>⏱ ${formatDuration(a.duration)}</div>
-      </div>
+  const distanceKm =
+    (a.distance / 1000).toFixed(2);
+
+  const durationMin =
+    Math.floor((a.duration || 0) / 60);
+
+  return `
+
+    <div
+      onclick="viewActivity(${a.id})"
+      class="activity-card"
+    >
+
+      <h4>
+        🏃 Atividade ${a.id}
+      </h4>
+
+      <br>
+
+      <p>
+        📏 ${distanceKm} km
+      </p>
+
+      <p>
+        ⏱ ${durationMin} min
+      </p>
 
     </div>
-  `).join("");
+  `;
+
+}).join("");
 
   renderChart(data);
+  hideLoading();
 }
 
 async function loadRanking() {
@@ -425,20 +613,33 @@ async function loadRanking() {
 
   const div = document.getElementById("rankingList");
 
-  div.innerHTML = data.map((r, i) => `
-    <div class="card">
-      
-      <div class="card-header">
-        🥇 #${i + 1}
-      </div>
+  div.innerHTML = data.map((r, i) => {
 
-      <div class="card-body">
-        👤 ${r.name}<br>
-        📏 ${formatDistance(r.total_distance)}
-      </div>
+  const distanceKm =
+    (r.total_distance / 1000).toFixed(2);
+
+  return `
+
+    <div class="activity-card">
+
+      <h4>
+        🏆 #${i + 1} — ${r.name}
+      </h4>
+
+      <br>
+
+      <p>
+        📏 ${distanceKm} km
+      </p>
+
+      <p>
+        🚴 ${r.total_activities} atividades
+      </p>
 
     </div>
-  `).join("");
+  `;
+
+}).join("");
 }
 
 async function viewActivity(id) {
@@ -484,31 +685,38 @@ async function viewActivity(id) {
 }
 window.onload = () => {
 
-  const savedUserId = localStorage.getItem("userId");
-  const savedUserName = localStorage.getItem("userName");
+  const savedUserName =
+    localStorage.getItem("userName");
 
-  if (savedUserId && savedUserName) {
+  if (savedUserName) {
 
-    userId = savedUserId;
+    document.getElementById("sidebarUser")
+      .innerText = savedUserName;
 
-    document.getElementById("username").value = savedUserName;
-
-    setStatus("Usuário conectado: " + savedUserName);
+    document.getElementById("sidebarEmail")
+      .innerText = "online";
   }
+
+  loadHistory();
+
+  loadRanking();
 };
 
 function logout() {
 
-  localStorage.removeItem("userId");
-  localStorage.removeItem("userName");
+  showToast("Saindo...");
 
-  userId = null;
+  setTimeout(() => {
 
-  document.getElementById("username").value = "";
+    localStorage.removeItem("token");
 
-  setStatus("Usuário desconectado");
+    localStorage.removeItem("userId");
 
-  alert("Logout realizado");
+    localStorage.removeItem("userName");
+
+    window.location.href = "login.html";
+
+  }, 1000);
 }
 
 if ("serviceWorker" in navigator) {
@@ -591,69 +799,58 @@ function renderChart(data) {
   });
 }
 
-async function registerUser() {
+function updateDashboardStats(data) {
 
-  const name = document.getElementById("name").value;
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  const totalActivities = data.length;
 
-  const res = await fetch("http://localhost:3000/users/register", {
+  const totalDistance = data.reduce((sum, a) => {
+    return sum + Number(a.distance || 0);
+  }, 0);
 
-    method: "POST",
+  const totalDuration = data.reduce((sum, a) => {
+    return sum + Number(a.duration || 0);
+  }, 0);
 
-    headers: {
-      "Content-Type": "application/json"
-    },
+  const distanceKm = (totalDistance / 1000).toFixed(2);
 
-    body: JSON.stringify({
-      name,
-      email,
-      password
-    })
-  });
+  const durationMin = Math.floor(totalDuration / 60);
 
-  const data = await res.json();
+  document.getElementById("totalActivities").innerText =
+    totalActivities;
 
-  alert(data.message);
+  document.getElementById("totalDistance").innerText =
+    distanceKm + " km";
+
+  document.getElementById("totalTime").innerText =
+    durationMin + " min";
 }
 
-async function loginUser() {
+function showLoading() {
 
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  document.getElementById("loadingOverlay")
+    .style.display = "flex";
+}
 
-  const res = await fetch("http://localhost:3000/users/login", {
+function hideLoading() {
 
-    method: "POST",
+  document.getElementById("loadingOverlay")
+    .style.display = "none";
+}
 
-    headers: {
-      "Content-Type": "application/json"
-    },
+function showToast(message) {
 
-    body: JSON.stringify({
-      email,
-      password
-    })
-  });
+  const toast =
+    document.getElementById("toast");
 
-  const data = await res.json();
+  toast.innerText = message;
 
-  if (!res.ok) {
-    alert(data.message);
-    return;
-  }
+  toast.classList.add("show");
 
-  localStorage.setItem("token", data.token);
+  setTimeout(() => {
 
-  localStorage.setItem("userId", data.user.id);
+    toast.classList.remove("show");
 
-  localStorage.setItem("userName", data.user.name);
-
-  userId = data.user.id;
-
-  setStatus("Logado como " + data.user.name);
-
-  alert("Login realizado");
+  }, 3000);
 }
 
 </script>
