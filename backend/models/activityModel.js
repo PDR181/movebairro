@@ -58,17 +58,18 @@ async function getActivities() {
 
 async function getRanking() {
   const query = `
-    SELECT 
-      users.id,
-      users.name,
-      COALESCE(SUM(activities.distance), 0) AS total_distance,
-      COALESCE(SUM(activities.duration), 0) AS total_duration,
-      COUNT(activities.id) AS total_activities
-    FROM users
-    LEFT JOIN activities ON users.id = activities.user_id
-    GROUP BY users.id, users.name
-    ORDER BY total_distance DESC
-  `;
+  SELECT
+    users.id,
+    users.name,
+    COALESCE(SUM(activities.distance), 0) AS total_distance,
+    COALESCE(SUM(activities.duration), 0) AS total_duration,
+    COUNT(activities.id) AS total_activities
+  FROM users
+  LEFT JOIN activities
+    ON users.id = activities.user_id
+  GROUP BY users.id, users.name
+  ORDER BY total_distance DESC
+`;
 
   const result = await pool.query(query);
   return result.rows;

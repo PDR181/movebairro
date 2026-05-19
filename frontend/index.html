@@ -5,9 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MoveBairro</title>
 
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+
   <!-- MAPA -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     * { box-sizing: border-box; }
@@ -19,9 +23,10 @@
     }
 
     .container {
-      max-width: 1100px;
-      margin: auto;
-      padding: 20px;
+    width: 100%;
+    max-width: 1100px;
+    margin: auto;
+    padding: 15px;
     }
 
     .hero {
@@ -40,11 +45,14 @@
     }
 
     button {
-      padding: 10px;
+      flex: 1;
+      min-width: 120px;
+      padding: 12px;
       border: none;
       border-radius: 8px;
       color: white;
       cursor: pointer;
+      font-size: 15px;
     }
 
     .btn-start { background: green; }
@@ -82,9 +90,33 @@
 }
 
     #map {
+      width: 100%;
       height: 400px;
       border-radius: 10px;
     }
+@media (max-width: 768px) {
+
+  .actions {
+    flex-direction: column;
+  }
+
+  button {
+    width: 100%;
+  }
+
+  .container {
+    padding: 10px;
+  }
+
+  #map {
+    height: 300px;
+  }
+
+  h1, h3 {
+    text-align: center;
+  }
+}
+
   </style>
 </head>
 
@@ -93,6 +125,45 @@
 
   <div class="hero">
     <h1>MoveBairro</h1>
+  </div>
+
+  <div class="card">
+
+    <h3>Login</h3>
+
+    <input
+      type="text"
+      id="name"
+      placeholder="Nome"
+      style="width:100%;padding:10px;margin-bottom:10px;"
+    >
+
+    <input
+      type="email"
+      id="email"
+      placeholder="Email"
+      style="width:100%;padding:10px;margin-bottom:10px;"
+    >
+
+    <input
+      type="password"
+      id="password"
+      placeholder="Senha"
+      style="width:100%;padding:10px;margin-bottom:10px;"
+    >
+
+    <div style="display:flex; gap:10px;">
+
+      <button onclick="registerUser()" style="background:green;">
+        Cadastrar
+      </button>
+
+      <button onclick="loginUser()" style="background:#2563eb;">
+        Login
+      </button>
+
+    </div>
+
   </div>
 
   <div class="card">
@@ -115,6 +186,9 @@
 >
   Entrar
     </button>
+    <button onclick="logout()" style="background:#444;">
+  Sair
+    </button>
     <button class="btn-start" onclick="startActivity()">Iniciar</button>
     <button class="btn-finish" onclick="finishActivity()">Finalizar</button>
     <button class="btn-history" onclick="loadHistory()">Histórico</button>
@@ -134,8 +208,25 @@
   </div>
 
   <div class="card">
+    <h3>Estatísticas</h3>
+
+    <div id="stats">
+      Nenhuma atividade finalizada
+    </div>
+  </div>  
+
+  <div class="card">
     <h3>Histórico</h3>
     <div id="activitiesList"></div>
+  </div>
+
+  <div class="card">
+    <h3>Dashboard</h3>
+
+    <canvas id="distanceChart"></canvas>
+    <br><br>
+
+    <canvas id="speedChart"></canvas>
   </div>
 
   <div class="card">
@@ -156,6 +247,8 @@ let polyline;
 let startMarker = null;
 let endMarker = null;
 let path = [];
+let distanceChart = null;
+let speedChart = null;
 
 function initMap() {
   map = L.map('map').setView([-21.22, -43.77], 15);
@@ -181,17 +274,33 @@ async function setUser() {
     return;
   }
 
-  const res = await fetch("http://localhost:3000/users", {
+  const email = `${name.toLowerCase()}@movebairro.com`;
+  const password = "123456";
+
+  const res = await fetch("http://localhost:3000/users/register", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ name })
+    body: JSON.stringify({
+      name,
+      email,
+      password
+    })
   });
 
   const data = await res.json();
 
+  console.log(data);
+
+  if (!res.ok) {
+    alert(data.message || "Erro ao criar usuário");
+    return;
+  }
+
   userId = data.user.id;
+  localStorage.setItem("userId", userId);
+  localStorage.setItem("userName", name);
 
   setStatus("Usuário conectado: " + name);
 }
@@ -306,6 +415,8 @@ async function loadHistory() {
 
     </div>
   `).join("");
+
+  renderChart(data);
 }
 
 async function loadRanking() {
@@ -322,7 +433,7 @@ async function loadRanking() {
       </div>
 
       <div class="card-body">
-        👤 Usuário ${r.user_id}<br>
+        👤 ${r.name}<br>
         📏 ${formatDistance(r.total_distance)}
       </div>
 
@@ -370,6 +481,179 @@ async function viewActivity(id) {
   map.fitBounds(path);
 
   setStatus("Visualizando atividade " + id);
+}
+window.onload = () => {
+
+  const savedUserId = localStorage.getItem("userId");
+  const savedUserName = localStorage.getItem("userName");
+
+  if (savedUserId && savedUserName) {
+
+    userId = savedUserId;
+
+    document.getElementById("username").value = savedUserName;
+
+    setStatus("Usuário conectado: " + savedUserName);
+  }
+};
+
+function logout() {
+
+  localStorage.removeItem("userId");
+  localStorage.removeItem("userName");
+
+  userId = null;
+
+  document.getElementById("username").value = "";
+
+  setStatus("Usuário desconectado");
+
+  alert("Logout realizado");
+}
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+
+function renderChart(data) {
+
+  const labels = data.map(a => `Atividade ${a.id}`);
+
+  const distances = data.map(a =>
+    (a.distance / 1000).toFixed(2)
+  );
+
+  const speeds = data.map(a => {
+
+    if (!a.duration || a.duration <= 0) {
+      return 0;
+    }
+
+    const hours = a.duration / 3600;
+
+    return ((a.distance / 1000) / hours).toFixed(2);
+  });
+
+  // =========================
+  // GRÁFICO DISTÂNCIA
+  // =========================
+
+  const ctxDistance = document.getElementById("distanceChart");
+
+  if (distanceChart) {
+    distanceChart.destroy();
+  }
+
+  distanceChart = new Chart(ctxDistance, {
+
+    type: "bar",
+
+    data: {
+      labels,
+
+      datasets: [{
+        label: "Distância (km)",
+        data: distances
+      }]
+    },
+
+    options: {
+      responsive: true
+    }
+  });
+
+  // =========================
+  // GRÁFICO VELOCIDADE
+  // =========================
+
+  const ctxSpeed = document.getElementById("speedChart");
+
+  if (speedChart) {
+    speedChart.destroy();
+  }
+
+  speedChart = new Chart(ctxSpeed, {
+
+    type: "line",
+
+    data: {
+      labels,
+
+      datasets: [{
+        label: "Velocidade Média (km/h)",
+        data: speeds
+      }]
+    },
+
+    options: {
+      responsive: true
+    }
+  });
+}
+
+async function registerUser() {
+
+  const name = document.getElementById("name").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const res = await fetch("http://localhost:3000/users/register", {
+
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json"
+    },
+
+    body: JSON.stringify({
+      name,
+      email,
+      password
+    })
+  });
+
+  const data = await res.json();
+
+  alert(data.message);
+}
+
+async function loginUser() {
+
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const res = await fetch("http://localhost:3000/users/login", {
+
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json"
+    },
+
+    body: JSON.stringify({
+      email,
+      password
+    })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.message);
+    return;
+  }
+
+  localStorage.setItem("token", data.token);
+
+  localStorage.setItem("userId", data.user.id);
+
+  localStorage.setItem("userName", data.user.name);
+
+  userId = data.user.id;
+
+  setStatus("Logado como " + data.user.name);
+
+  alert("Login realizado");
 }
 
 </script>
