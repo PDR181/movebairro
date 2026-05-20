@@ -9,6 +9,18 @@ const activityRoutes = require("./routes/activityRoutes");
 app.use(cors());
 app.use(express.json());
 
+// ✅ LOGS DAS REQUISIÇÕES
+app.use((req, res, next) => {
+
+  console.log(
+    `[${new Date().toLocaleTimeString()}]`,
+    req.method,
+    req.url
+  );
+
+  next();
+});
+
 app.use("/users", userRoutes);
 app.use("/activities", activityRoutes);
 
@@ -19,12 +31,20 @@ app.get("/", (req, res) => {
 // 👇 CONEXÃO COM BANCO
 pool.connect()
   .then(() => {
+
     console.log("Conectado ao PostgreSQL");
 
     app.listen(3000, () => {
+
       console.log("Servidor rodando na porta 3000");
+
     });
   })
+
   .catch((err) => {
-    console.error("Erro ao conectar no PostgreSQL:", err);
+
+    console.error(
+      "Erro ao conectar no PostgreSQL:",
+      err
+    );
   });

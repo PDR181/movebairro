@@ -30,6 +30,8 @@ async function login(req, res) {
   try {
     const { email, password } = req.body;
 
+    console.log("Tentativa de login:", email);
+
     const user = await findUserByEmail(email);
 
     if (!user) {

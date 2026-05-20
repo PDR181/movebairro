@@ -19,6 +19,8 @@ const calculateDistance = require("../utils/distance");
 async function startActivity(req, res) {
   const { userId } = req.body;
 
+  console.log("Atividade iniciada pelo usuário:", userId);
+
   try {
     const activity = await createActivity(userId);
 

@@ -430,7 +430,6 @@ if (!token) {
 
 let activityId = null;
 let watchId = null;
-let userId = null;
 
 // MAPA
 let map;
@@ -457,6 +456,9 @@ function setStatus(msg) {
 }
 
 async function startActivity() {
+    
+  const userId =
+  localStorage.getItem("userId");
 
   if (!userId) {
 
